@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restoran - Kirish</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .role-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        .role-card:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+            transform: translateY(-2px);
+        }
+        .role-card.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .role-card .role-emoji {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .role-card .role-name {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .demo-hint {
+            background: #f0f0ff;
+            border: 1px solid #d0d0ff;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #555;
+        }
+        .demo-hint strong {
+            color: #667eea;
+        }
+        .demo-hint .hint-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        .version-tag {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .input-icon-wrap {
+            position: relative;
+        }
+        .input-icon-wrap .field-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 17px;
+            pointer-events: none;
+        }
+        .input-icon-wrap input {
+            padding-left: 42px;
+        }
+        .show-pass-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #888;
+        }
+        .login-page-bg {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+        }
+        .floating-shapes {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.05;
+            background: white;
+            animation: float 8s ease-in-out infinite;
+        }
+        .shape:nth-child(1) { width: 300px; height: 300px; top: -100px; left: -100px; animation-delay: 0s; }
+        .shape:nth-child(2) { width: 200px; height: 200px; bottom: -60px; right: -60px; animation-delay: 2s; }
+        .shape:nth-child(3) { width: 150px; height: 150px; top: 50%; left: 70%; animation-delay: 4s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+        .login-container {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="login-page login-page-bg">
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="login-container">
+        <div class="login-logo">
+            <span class="logo-icon">🍽️</span>
+            <h1>RESTORAN</h1>
+            <p>Boshqaruv tizimi</p>
+        </div>
+
+        <div class="login-form">
+            <h2>Tizimga kirish</h2>
+
+            <!-- Rol tanlash -->
+            <div class="login-cards">
+                <div class="role-card active" onclick="selectRole('waiter', this)">
+                    <span class="role-emoji">🧑‍💼</span>
+                    <span class="role-name">Ofitsiant</span>
+                </div>
+                <div class="role-card" onclick="selectRole('chef', this)">
+                    <span class="role-emoji">👨‍🍳</span>
+                    <span class="role-name">Oshpaz</span>
+                </div>
+                <div class="role-card" onclick="selectRole('admin', this)">
+                    <span class="role-emoji">👤</span>
+                    <span class="role-name">Admin</span>
+                </div>
+            </div>
+
+            <!-- Demo ma'lumotlar -->
+            <div class="demo-hint" id="demoHint">
+                <strong>💡 Kirish ma'lumotlari:</strong>
+                <div class="hint-row"><span>Login:</span> <strong id="hintUser">afisant</strong></div>
+                <div class="hint-row"><span>Parol:</span> <strong id="hintPass">afisant123</strong></div>
+            </div>
+
+            <!-- Xato xabari -->
+            <div class="error-msg" id="errorMsg">
+                ❌ Login yoki parol noto'g'ri!
+            </div>
+
+            <!-- Login form -->
+            <div class="form-group">
+                <label>👤 Login</label>
+                <div class="input-icon-wrap">
+                    <span class="field-icon">👤</span>
+                    <input type="text" id="username" placeholder="Loginni kiriting" autocomplete="off">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>🔒 Parol</label>
+                <div class="input-icon-wrap">
+                    <span class="field-icon">🔒</span>
+                    <input type="password" id="password" placeholder="Parolni kiriting" id="passInput">
+                    <button class="show-pass-btn" onclick="togglePass()" type="button" title="Ko'rsatish">👁️</button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="doLogin()" id="loginBtn">
+                🚀 Kirish
+            </button>
+        </div>
+
+        <div class="version-tag">v1.0 © 2026 Restoran Boshqaruv Tizimi</div>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        let selectedRole = 'waiter';
+
+        const roleHints = {
+            waiter: { user: 'afisant', pass: 'afisant123' },
+            chef:   { user: 'oshpaz',  pass: 'oshpaz123'  },
+            admin:  { user: 'admin',   pass: 'admin123'   }
+        };
+
+        // Agar allaqachon login qilingan bo'lsa, redirect
+        window.onload = function() {
+            const user = getCurrentUser();
+            if (user) redirectUser(user.role);
+
+            // Enter tugmasi
+            document.getElementById('password').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') doLogin();
+            });
+            document.getElementById('username').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') doLogin();
+            });
+        };
+
+        function selectRole(role, el) {
+            selectedRole = role;
+            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+
+            // Hint yangilash
+            document.getElementById('hintUser').textContent = roleHints[role].user;
+            document.getElementById('hintPass').textContent = roleHints[role].pass;
+
+            // Inputlarni to'ldirish
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+
+        function togglePass() {
+            const inp = document.getElementById('password');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        }
+
+        function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const btn = document.getElementById('loginBtn');
+
+            if (!username || !password) {
+                errorMsg.textContent = '⚠️ Login va parolni to\'ldiring!';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            // Foydalanuvchini topish
+            let foundUser = null;
+            for (const key in USERS) {
+                const u = USERS[key];
+                if (u.username === username && u.password === password) {
+                    foundUser = u;
+                    break;
+                }
+            }
+
+            if (!foundUser) {
+                errorMsg.textContent = '❌ Login yoki parol noto\'g\'ri!';
+                errorMsg.classList.add('show');
+                document.getElementById('password').value = '';
+                return;
+            }
+
+            // Muvaffaqiyatli kirish
+            errorMsg.classList.remove('show');
+            btn.textContent = '✅ Kirилmoqda...';
+            btn.disabled = true;
+
+            setCurrentUser(foundUser);
+
+            setTimeout(() => {
+                redirectUser(foundUser.role);
+            }, 600);
+        }
+
+        function redirectUser(role) {
+            if (role === 'waiter') window.location.href = 'ofitsiant.html';
+            else if (role === 'chef') window.location.href = 'oshpaz.html';
+            else if (role === 'admin') window.location.href = 'admin.html';
+        }
+    </script>
+</body>
+</html>

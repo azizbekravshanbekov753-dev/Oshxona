@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oshpaz Panel - Restoran</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chef-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .chef-tab {
+            padding: 10px 22px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chef-tab:hover { border-color: #e67e22; background: #fef9e7; }
+        .chef-tab.active { background: #e67e22; border-color: #e67e22; color: white; }
+        .chef-tab .tab-count {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 12px;
+        }
+        .chef-tab.active .tab-count { background: rgba(255,255,255,0.4); }
+
+        .order-action-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        .step {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            transition: background 0.4s;
+        }
+        .step.done { background: #27ae60; }
+        .step.active { background: #f39c12; }
+
+        .new-order-alert {
+            animation: newOrderBlink 1s ease 3;
+        }
+        @keyframes newOrderBlink {
+            0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+            50% { box-shadow: 0 4px 30px rgba(231,76,60,0.6); }
+        }
+
+        .chef-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 15px 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .chef-status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+        .chef-status-item .s-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--secondary);
+            line-height: 1;
+        }
+        .chef-status-item .s-label {
+            font-size: 12px;
+            color: #888;
+        }
+        .chef-status-divider {
+            width: 1px;
+            height: 40px;
+            background: #e0e0e0;
+        }
+
+        .send-msg-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .send-msg-bar .form-group {
+            flex: 1;
+            min-width: 200px;
+            margin: 0;
+        }
+        .send-msg-bar textarea {
+            resize: none;
+            height: 44px;
+            padding-top: 10px;
+        }
+
+        .elapsed-time {
+            font-size: 12px;
+            color: #e67e22;
+            font-weight: 600;
+        }
+        .elapsed-time.late {
+            color: #e74c3c;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .history-table th, .history-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        .history-table th {
+            background: #f8f9fa;
+            font-weight: 700;
+            color: #555;
+            font-size: 13px;
+        }
+        .history-table tr:hover td { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+<div class="panel-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="logo">🍽️</span>
+            <h2>Restoran</h2>
+            <span class="role-badge role-chef">👨‍🍳 Oshpaz</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="active" onclick="showPage('buyurtmalar', this)">
+                <span class="nav-icon">🔥</span> Buyurtmalar
+                <span id="sidebarNewCount" style="position:static;margin-left:auto;background:#e74c3c;color:white;border-radius:10px;padding:2px 7px;font-size:11px;display:none"></span>
+            </a>
+            <a onclick="showPage('tarix', this)">
+                <span class="nav-icon">📜</span> Tarix
+            </a>
+            <a onclick="showPage('afisantga-xabar', this)">
+                <span class="nav-icon">📨</span> Ofisiantga Xabar
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">👨‍🍳</div>
+                <div class="user-details">
+                    <div class="name" id="userName">Oshpaz</div>
+                    <div class="role">Oshxona</div>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()">🚪 Chiqish</button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <div class="top-bar">
+            <h1 id="pageTitle">🔥 Buyurtmalar</h1>
+            <div class="top-bar-right">
+                <div class="notification-bell" onclick="toggleNotifPanel()" title="Bildirishnomalar">
+                    🔔
+                    <span class="notif-count" id="notifBadge" style="display:none">0</span>
+                </div>
+                <span id="currentTime" style="font-size:13px;color:#888;"></span>
+            </div>
+        </div>
+
+        <div class="page-content">
+
+            <!-- ========== BUYURTMALAR ========== -->
+            <div class="page-section active" id="page-buyurtmalar">
+
+                <!-- Status bar -->
+                <div class="chef-status-bar">
+                    <div class="chef-status-item">
+                        <span class="s-value" id="statNew">0</span>
+                        <span class="s-label">🔵 Yangi</span>
+                    </div>
+                    <div class="chef-status-divider"></div>
+                    <div class="chef-status-item">
+                        <span class="s-value" id="statCooking">0</span>
+                        <span class="s-label">🟡 Tayyorlanmoqda</span>
+                    </div>
+                    <div class="chef-status-divider"></div>
+                    <div class="chef-status-item">
+                        <span class="s-value" id="statReady">0</span>
+                        <span class="s-label">🟢 Tayyor</span>
+                    </div>
+                    <div class="chef-status-divider"></div>
+                    <div class="chef-status-item">
+                        <span class="s-value" id="statDone">0</span>
+                        <span class="s-label">⚫ Berildi</span>
+                    </div>
+                </div>
+
+                <!-- Tablar -->
+                <div class="chef-tabs">
+                    <button class="chef-tab active" onclick="filterChef('active', this)">
+                        🔥 Faol Buyurtmalar
+                        <span class="tab-count" id="tabActiveCount">0</span>
+                    </button>
+                    <button class="chef-tab" onclick="filterChef('yangi', this)">
+                        🔵 Yangi
+                        <span class="tab-count" id="tabNewCount">0</span>
+                    </button>
+                    <button class="chef-tab" onclick="filterChef('tayyorlanmoqda', this)">
+                        🟡 Tayyorlanmoqda
+                        <span class="tab-count" id="tabCookCount">0</span>
+                    </button>
+                    <button class="chef-tab" onclick="filterChef('tayyor', this)">
+                        🟢 Tayyor
+                        <span class="tab-count" id="tabReadyCount">0</span>
+                    </button>
+                </div>
+
+                <!-- Buyurtmalar grid -->
+                <div class="chef-orders-panel" id="chefOrdersGrid">
+                    <div class="empty-state" style="grid-column:1/-1">
+                        <span class="empty-icon">🍳</span>
+                        <p>Faol buyurtma yo'q</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== TARIX ========== -->
+            <div class="page-section" id="page-tarix">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📜 Bajarilgan Buyurtmalar</h3>
+                        <span id="historyCount" style="font-size:13px;color:#888;"></span>
+                    </div>
+                    <div class="card-body" style="overflow-x:auto;">
+                        <table class="history-table" id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Stol</th>
+                                    <th>Taomlar</th>
+                                    <th>Jami</th>
+                                    <th>Vaqt</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== OFISIANTGA XABAR ========== -->
+            <div class="page-section" id="page-afisantga-xabar">
+                <div class="card" style="max-width:600px;">
+                    <div class="card-header">
+                        <h3>📨 Ofisiantga Xabar Yuborish</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>📋 Buyurtma ID (ixtiyoriy)</label>
+                            <input type="text" id="msgOrderId" placeholder="Masalan: #0001">
+                        </div>
+                        <div class="form-group">
+                            <label>💬 Xabar matni</label>
+                            <textarea id="msgText" rows="4" placeholder="Masalan: #0001 buyurtma tayyor, olib keling!"></textarea>
+                        </div>
+                        <button class="btn btn-warning" onclick="sendMsgToWaiter()" style="width:100%">
+                            📨 Xabar Yuborish
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Yuborilgan xabarlar -->
+                <div class="card" style="max-width:600px;">
+                    <div class="card-header">
+                        <h3>📤 Yuborilgan Xabarlar</h3>
+                    </div>
+                    <div class="card-body" id="sentMsgsList">
+                        <div class="empty-state">
+                            <span class="empty-icon">📤</span>
+                            <p>Xabar yuborilmagan</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- BILDIRISHNOMA PANELI -->
+<div class="notification-panel" id="notifPanel">
+    <div class="notif-panel-header">
+        <h3>🔔 Bildirishnomalar</h3>
+        <button class="notif-close" onclick="toggleNotifPanel()">✕</button>
+    </div>
+    <div class="notif-list" id="notifList">
+        <div class="empty-state">
+            <span class="empty-icon">🔔</span>
+            <p>Bildirishnoma yo'q</p>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MODAL: Tayyor xabari -->
+<div class="modal-overlay" id="readyModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>🟢 Tayyor deb belgilash</h3>
+            <button class="modal-close" onclick="closeModal('readyModal')">✕</button>
+        </div>
+        <div class="modal-body" id="readyModalBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('readyModal')">Bekor qilish</button>
+            <button class="btn btn-success" onclick="confirmReady()">✅ Tayyor!</button>
+        </div>
+    </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+// ===== TEKSHIRISH =====
+const currentUser = getCurrentUser();
+if (!currentUser || currentUser.role !== 'chef') {
+    window.location.href = 'index.html';
+}
+document.getElementById('userName').textContent = currentUser.name;
+
+// ===== STATE =====
+let chefFilter = 'active';
+let pendingReadyId = null;
+let knownOrderIds = new Set();
+
+// ===== VAQT =====
+function updateTime() {
+    const now = new Date();
+    document.getElementById('currentTime').textContent =
+        now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// ===== SAHIFA =====
+function showPage(id, el) {
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    el.classList.add('active');
+
+    const titles = {
+        buyurtmalar: '🔥 Buyurtmalar',
+        tarix: '📜 Tarix',
+        'afisantga-xabar': '📨 Ofisiantga Xabar'
+    };
+    document.getElementById('pageTitle').textContent = titles[id] || id;
+
+    if (id === 'tarix') renderHistory();
+    if (id === 'afisantga-xabar') renderSentMsgs();
+}
+
+// ===== BUYURTMALAR =====
+function getActiveOrders() {
+    return getOrders().filter(o => o.status !== 'berildi');
+}
+
+function renderChefOrders() {
+    const all = getOrders();
+    const active = all.filter(o => o.status !== 'berildi');
+    const newOrders = active.filter(o => o.status === 'yangi');
+    const cooking = active.filter(o => o.status === 'tayyorlanmoqda');
+    const ready = active.filter(o => o.status === 'tayyor');
+    const done = all.filter(o => o.status === 'berildi');
+
+    // Status bar
+    document.getElementById('statNew').textContent = newOrders.length;
+    document.getElementById('statCooking').textContent = cooking.length;
+    document.getElementById('statReady').textContent = ready.length;
+    document.getElementById('statDone').textContent = done.length;
+
+    // Tab counts
+    document.getElementById('tabActiveCount').textContent = active.length;
+    document.getElementById('tabNewCount').textContent = newOrders.length;
+    document.getElementById('tabCookCount').textContent = cooking.length;
+    document.getElementById('tabReadyCount').textContent = ready.length;
+
+    // Sidebar badge
+    const sidebar = document.getElementById('sidebarNewCount');
+    if (newOrders.length > 0) {
+        sidebar.textContent = newOrders.length;
+        sidebar.style.display = 'inline';
+    } else {
+        sidebar.style.display = 'none';
+    }
+
+    // Filtered orders
+    let filtered;
+    if (chefFilter === 'active') filtered = active;
+    else filtered = active.filter(o => o.status === chefFilter);
+
+    // Sort: yangi > tayyorlanmoqda > tayyor, then by time
+    const statusOrder = { yangi: 0, tayyorlanmoqda: 1, tayyor: 2 };
+    filtered.sort((a, b) => {
+        if (statusOrder[a.status] !== statusOrder[b.status])
+            return statusOrder[a.status] - statusOrder[b.status];
+        return a.timestamp - b.timestamp;
+    });
+
+    const grid = document.getElementById('chefOrdersGrid');
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+            <span class="empty-icon">🍳</span>
+            <p>Bu kategoriyada buyurtma yo'q</p>
+        </div>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(o => {
+        const elapsed = getElapsed(o.timestamp);
+        const isUrgent = o.status === 'yangi' && Date.now() - o.timestamp > 5 * 60 * 1000;
+
+        const steps = ['yangi', 'tayyorlanmoqda', 'tayyor', 'berildi'];
+        const stepIdx = steps.indexOf(o.status);
+
+        let actionBtns = '';
+        if (o.status === 'yangi') {
+            actionBtns = `<button class="btn btn-warning btn-sm" onclick="startCooking('${o.id}')">🍳 Tayyorlashni boshlash</button>`;
+        } else if (o.status === 'tayyorlanmoqda') {
+            actionBtns = `<button class="btn btn-success btn-sm" onclick="openReadyModal('${o.id}')">✅ Tayyor!</button>`;
+        } else if (o.status === 'tayyor') {
+            actionBtns = `<span style="color:#27ae60;font-weight:700;font-size:14px;">✅ Ofisiant kutmoqda...</span>`;
+        }
+
+        return `
+        <div class="chef-order-card ${isUrgent ? 'urgent' : ''}" id="order-card-${o.id}">
+            <div class="chef-order-header">
+                <div>
+                    <strong style="font-size:16px;">${o.id}</strong>
+                    <span class="order-table" style="margin-left:8px;">🪑 ${o.tableNum}-stol</span>
+                </div>
+                <div>
+                    <span class="status-badge status-${o.status}">${statusText(o.status)}</span>
+                </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div style="padding:10px 18px 5px;">
+                <div class="progress-steps">
+                    <div class="step ${stepIdx >= 0 ? 'done' : ''}"></div>
+                    <div class="step ${stepIdx >= 1 ? (stepIdx === 1 ? 'active' : 'done') : ''}"></div>
+                    <div class="step ${stepIdx >= 2 ? (stepIdx === 2 ? 'active' : 'done') : ''}"></div>
+                    <div class="step ${stepIdx >= 3 ? 'done' : ''}"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:#aaa;">
+                    <span>Yangi</span><span>Tayyorlanmoqda</span><span>Tayyor</span><span>Berildi</span>
+                </div>
+            </div>
+
+            <div class="chef-order-body">
+                <ul class="order-items-list">
+                    ${o.items.map(i => `
+                    <li style="font-size:15px;padding:6px 0;">
+                        <span style="font-weight:600;">${i.emoji} ${i.name}</span>
+                        <span style="background:#f39c12;color:white;border-radius:6px;padding:2px 8px;font-weight:700;font-size:13px;">× ${i.qty}</span>
+                    </li>`).join('')}
+                </ul>
+                ${o.note ? `<div class="order-note" style="background:#fff3e0;border-radius:8px;padding:8px 12px;margin-top:8px;">💬 ${o.note}</div>` : ''}
+            </div>
+
+            <div class="chef-order-footer">
+                <div>
+                    <div style="font-size:12px;color:#888;">👤 ${o.waiterName}</div>
+                    <div class="elapsed-time ${isUrgent ? 'late' : ''}">⏱️ ${elapsed}</div>
+                </div>
+                <div class="order-action-btns">
+                    ${actionBtns}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    // Yangi buyurtmalar uchun animatsiya
+    filtered.filter(o => o.status === 'yangi').forEach(o => {
+        if (!knownOrderIds.has(o.id)) {
+            const card = document.getElementById('order-card-' + o.id);
+            if (card) {
+                card.classList.add('new-order-alert');
+                setTimeout(() => card.classList.remove('new-order-alert'), 3000);
+            }
+            knownOrderIds.add(o.id);
+        }
+    });
+}
+
+function getElapsed(timestamp) {
+    const diff = Math.floor((Date.now() - timestamp) / 1000);
+    if (diff < 60) return diff + ' soniya';
+    if (diff < 3600) return Math.floor(diff / 60) + ' daqiqa';
+    return Math.floor(diff / 3600) + ' soat';
+}
+
+function statusText(s) {
+    const map = { yangi: '🔵 Yangi', tayyorlanmoqda: '🟡 Tayyorlanmoqda', tayyor: '🟢 Tayyor!', berildi: '⚫ Berildi' };
+    return map[s] || s;
+}
+
+function filterChef(filter, el) {
+    chefFilter = filter;
+    document.querySelectorAll('.chef-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderChefOrders();
+}
+
+// ===== AMALLAR =====
+function startCooking(orderId) {
+    const orders = getOrders();
+    const idx = orders.findIndex(o => o.id === orderId);
+    if (idx < 0) return;
+
+    orders[idx].status = 'tayyorlanmoqda';
+    orders[idx].cookingStarted = Date.now();
+    saveOrders(orders);
+
+    // Ofisiantga bildirishnoma
+    addNotification('waiter',
+        `🍳 Buyurtma tayyorlanmoqda`,
+        `${orderId} — ${orders[idx].tableNum}-stol buyurtmasi tayyorlanmoqda`,
+        orderId
+    );
+
+    showToast('warning', `🍳 ${orderId} buyurtma tayyorlanmoqda!`);
+    renderChefOrders();
+}
+
+function openReadyModal(orderId) {
+    pendingReadyId = orderId;
+    const order = getOrders().find(o => o.id === orderId);
+    document.getElementById('readyModalBody').innerHTML = `
+        <p style="margin-bottom:15px;">Bu buyurtmani tayyor deb belgilaysizmi?</p>
+        <div style="background:#eafaf1;border-radius:10px;padding:15px;border-left:4px solid #27ae60;">
+            <strong style="font-size:16px;">${order.id}</strong> — 🪑 ${order.tableNum}-stol<br>
+            <span style="color:#888;font-size:13px;">${order.items.map(i => i.emoji + ' ' + i.name + ' ×' + i.qty).join(', ')}</span>
+        </div>
+        <p style="margin-top:15px;color:#666;font-size:14px;">Ofisiantga avtomatik xabar yuboriladi.</p>
+    `;
+    document.getElementById('readyModal').classList.add('open');
+}
+
+function confirmReady() {
+    const orders = getOrders();
+    const idx = orders.findIndex(o => o.id === pendingReadyId);
+    if (idx < 0) return;
+
+    orders[idx].status = 'tayyor';
+    orders[idx].readyTime = Date.now();
+    saveOrders(orders);
+
+    // Ofisiantga bildirishnoma
+    addNotification('waiter',
+        `✅ Buyurtma tayyor! — ${orders[idx].id}`,
+        `🪑 ${orders[idx].tableNum}-stol buyurtmasi tayyor! Olib keling.`,
+        orders[idx].id
+    );
+
+    showToast('success', `✅ ${pendingReadyId} buyurtma tayyor! Ofisiantga xabar yuborildi.`);
+    closeModal('readyModal');
+    renderChefOrders();
+}
+
+// ===== TARIX =====
+function renderHistory() {
+    const done = getOrders().filter(o => o.status === 'berildi').reverse();
+    document.getElementById('historyCount').textContent = `Jami: ${done.length} ta`;
+
+    if (done.length === 0) {
+        document.getElementById('historyBody').innerHTML =
+            `<tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px;">Tarix bo'sh</td></tr>`;
+        return;
+    }
+
+    document.getElementById('historyBody').innerHTML = done.map(o => `
+        <tr>
+            <td><strong>${o.id}</strong></td>
+            <td>🪑 ${o.tableNum}-stol</td>
+            <td>${o.items.map(i => i.emoji + ' ' + i.name + ' ×' + i.qty).join('<br>')}</td>
+            <td><strong style="color:#27ae60;">${formatPrice(o.total)}</strong></td>
+            <td>🕐 ${o.time}</td>
+            <td><span class="status-badge status-berildi">⚫ Berildi</span></td>
+        </tr>
+    `).join('');
+}
+
+// ===== XABAR YUBORISH =====
+function sendMsgToWaiter() {
+    const text = document.getElementById('msgText').value.trim();
+    const orderId = document.getElementById('msgOrderId').value.trim();
+
+    if (!text) {
+        showToast('error', '⚠️ Xabar matnini kiriting!');
+        return;
+    }
+
+    const title = orderId ? `📨 Oshpazdan: ${orderId}` : '📨 Oshpazdan xabar';
+    addNotification('waiter', title, text, orderId || null);
+
+    showToast('success', '✅ Xabar ofisiantga yuborildi!');
+    document.getElementById('msgText').value = '';
+    document.getElementById('msgOrderId').value = '';
+    renderSentMsgs();
+}
+
+function renderSentMsgs() {
+    const notifs = getNotifications().filter(n => n.role === 'waiter');
+    const container = document.getElementById('sentMsgsList');
+
+    if (notifs.length === 0) {
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">📤</span><p>Xabar yo'q</p></div>`;
+        return;
+    }
+
+    container.innerHTML = notifs.slice(0, 20).map(n => `
+        <div class="notif-item" style="margin-bottom:10px;">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-text">${n.text}</div>
+            <div class="notif-time">🕐 ${n.time}</div>
+        </div>
+    `).join('');
+}
+
+// ===== BILDIRISHNOMALAR =====
+function updateNotifBadge() {
+    const count = getNotifications().filter(n => n.role === 'chef' && !n.read).length;
+    const badge = document.getElementById('notifBadge');
+    if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function toggleNotifPanel() {
+    document.getElementById('notifPanel').classList.toggle('open');
+    renderNotifPanel();
+    // O'qildi deb belgilash
+    const notifs = getNotifications();
+    notifs.forEach(n => { if (n.role === 'chef') n.read = true; });
+    saveNotifications(notifs);
+    updateNotifBadge();
+}
+
+function renderNotifPanel() {
+    const notifs = getNotifications().filter(n => n.role === 'chef');
+    const list = document.getElementById('notifList');
+    if (notifs.length === 0) {
+        list.innerHTML = `<div class="empty-state"><span class="empty-icon">🔔</span><p>Bildirishnoma yo'q</p></div>`;
+        return;
+    }
+    list.innerHTML = notifs.map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'}">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-text">${n.text}</div>
+            <div class="notif-time">🕐 ${n.time}</div>
+        </div>
+    `).join('');
+}
+
+// ===== YANGI BUYURTMALARNI KUZATISH =====
+let prevOrderCount = getOrders().filter(o => o.status === 'yangi').length;
+
+function checkNewOrders() {
+    const newCount = getOrders().filter(o => o.status === 'yangi').length;
+    if (newCount > prevOrderCount) {
+        showToast('info', `🔔 Yangi buyurtma keldi!`);
+    }
+    prevOrderCount = newCount;
+}
+
+// ===== MODAL =====
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+
+// ===== TOAST =====
+function showToast(type, msg) {
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icons[type] || '💬'}</span> ${msg}`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
+// ===== REAL-TIME =====
+setInterval(() => {
+    checkNewOrders();
+    updateNotifBadge();
+    if (document.getElementById('page-buyurtmalar').classList.contains('active')) {
+        renderChefOrders();
+    }
+}, 3000);
+
+// ===== ISHGA TUSHIRISH =====
+// Mavjud buyurtmalar ID larini yodlash
+getOrders().forEach(o => knownOrderIds.add(o.id));
+renderChefOrders();
+updateNotifBadge();
+</script>
+</body>
+</html>

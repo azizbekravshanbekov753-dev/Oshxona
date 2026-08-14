@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ofitsiant Panel - Restoran</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="panel-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="logo">🍽️</span>
+            <h2>Restoran</h2>
+            <span class="role-badge role-waiter">🧑‍💼 Ofitsiant</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="active" onclick="showPage('yangi-buyurtma', this)">
+                <span class="nav-icon">📝</span> Yangi Buyurtma
+            </a>
+            <a onclick="showPage('mening-buyurtmalarim', this)">
+                <span class="nav-icon">📋</span> Mening Buyurtmalarim
+            </a>
+            <a onclick="showPage('xabarlar', this)">
+                <span class="nav-icon">💬</span> Oshpazdan Xabarlar
+                <span class="notif-count" id="sidebarNotifCount" style="position:static;margin-left:auto;background:#e74c3c;color:white;border-radius:10px;padding:2px 7px;font-size:11px;display:none"></span>
+            </a>
+            <a onclick="showPage('menyu-korish', this)">
+                <span class="nav-icon">🍴</span> Menyu Ko'rish
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">🧑‍💼</div>
+                <div class="user-details">
+                    <div class="name" id="userName">Ofitsiant</div>
+                    <div class="role">Xizmat ko'rsatuvchi</div>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()">🚪 Chiqish</button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <div class="top-bar">
+            <h1 id="pageTitle">📝 Yangi Buyurtma</h1>
+            <div class="top-bar-right">
+                <div class="notification-bell" onclick="toggleNotifPanel()" title="Bildirishnomalar">
+                    🔔
+                    <span class="notif-count" id="notifBadge" style="display:none">0</span>
+                </div>
+                <span id="currentTime" style="font-size:13px;color:#888;"></span>
+            </div>
+        </div>
+
+        <div class="page-content">
+
+            <!-- ========== YANGI BUYURTMA ========== -->
+            <div class="page-section active" id="page-yangi-buyurtma">
+                <div class="two-col">
+                    <!-- Chap: Menyu tanlash -->
+                    <div>
+                        <!-- Stol tanlash -->
+                        <div class="card" style="margin-bottom:20px;">
+                            <div class="card-header">
+                                <h3>🪑 Stol tanlang</h3>
+                                <span id="selectedTableLabel" style="font-weight:700;color:#667eea;">Tanlanmagan</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-grid" id="tableGrid"></div>
+                            </div>
+                        </div>
+
+                        <!-- Kategoriyalar -->
+                        <div class="category-tabs" id="categoryTabs"></div>
+
+                        <!-- Taomlar -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>🍴 Taom tanlang</h3>
+                                <span style="font-size:13px;color:#888;">Qo'shish uchun bosing</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="menu-grid" id="menuGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- O'ng: Savat -->
+                    <div>
+                        <div class="card order-cart">
+                            <div class="card-header">
+                                <h3>🛒 Buyurtma</h3>
+                                <button class="btn btn-sm btn-secondary" onclick="clearCart()">🗑️ Tozalash</button>
+                            </div>
+                            <div class="card-body">
+                                <div id="cartItems">
+                                    <div class="empty-state">
+                                        <span class="empty-icon">🛒</span>
+                                        <p>Savat bo'sh</p>
+                                    </div>
+                                </div>
+                                <div id="cartTotal" class="hidden">
+                                    <div class="cart-total">
+                                        <span>Jami:</span>
+                                        <span id="totalPrice">0 so'm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body" style="border-top:1px solid #f0f0f0;padding-top:15px;">
+                                <div class="form-group">
+                                    <label>💬 Izoh (ixtiyoriy)</label>
+                                    <textarea id="orderNote" rows="2" placeholder="Maxsus xohish, allergiya..."></textarea>
+                                </div>
+                                <button class="btn btn-success" style="width:100%" onclick="submitOrder()">
+                                    ✅ Buyurtmani Jo'natish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== MENING BUYURTMALARIM ========== -->
+            <div class="page-section" id="page-mening-buyurtmalarim">
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                        <strong>Filtr:</strong>
+                        <button class="cat-tab active" onclick="filterOrders('all', this)">Barchasi</button>
+                        <button class="cat-tab" onclick="filterOrders('yangi', this)">🔵 Yangi</button>
+                        <button class="cat-tab" onclick="filterOrders('tayyorlanmoqda', this)">🟡 Tayyorlanmoqda</button>
+                        <button class="cat-tab" onclick="filterOrders('tayyor', this)">🟢 Tayyor</button>
+                        <button class="cat-tab" onclick="filterOrders('berildi', this)">⚫ Berildi</button>
+                    </div>
+                </div>
+                <div class="orders-list" id="myOrdersList">
+                    <div class="empty-state">
+                        <span class="empty-icon">📋</span>
+                        <p>Buyurtmalar yo'q</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== XABARLAR ========== -->
+            <div class="page-section" id="page-xabarlar">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>💬 Oshpazdan Xabarlar</h3>
+                        <button class="btn btn-sm btn-secondary" onclick="markAllRead()">✅ Barchasini o'qildi</button>
+                    </div>
+                    <div class="card-body" id="messagesList">
+                        <div class="empty-state">
+                            <span class="empty-icon">💬</span>
+                            <p>Xabar yo'q</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== MENYU KO'RISH ========== -->
+            <div class="page-section" id="page-menyu-korish">
+                <div class="category-tabs" id="viewCategoryTabs"></div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="menu-grid" id="viewMenuGrid"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- BILDIRISHNOMA PANELI -->
+<div class="notification-panel" id="notifPanel">
+    <div class="notif-panel-header">
+        <h3>🔔 Bildirishnomalar</h3>
+        <button class="notif-close" onclick="toggleNotifPanel()">✕</button>
+    </div>
+    <div class="notif-list" id="notifList">
+        <div class="empty-state">
+            <span class="empty-icon">🔔</span>
+            <p>Bildirishnoma yo'q</p>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MODAL: Buyurtma berildi tasdiqi -->
+<div class="modal-overlay" id="orderDoneModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>✅ Buyurtma Tasdiqlash</h3>
+            <button class="modal-close" onclick="closeModal('orderDoneModal')">✕</button>
+        </div>
+        <div class="modal-body" id="orderDoneBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('orderDoneModal')">Bekor qilish</button>
+            <button class="btn btn-success" onclick="confirmOrderDone()">✅ Berildi deb belgilash</button>
+        </div>
+    </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+// ===== TEKSHIRISH =====
+const currentUser = getCurrentUser();
+if (!currentUser || currentUser.role !== 'waiter') {
+    window.location.href = 'index.html';
+}
+document.getElementById('userName').textContent = currentUser.name;
+
+// ===== STATE =====
+let cart = [];         // { item, qty }
+let selectedTable = null;
+let currentFilter = 'all';
+let pendingDoneOrderId = null;
+let currentCategory = 'Barchasi';
+
+// ===== VAQT =====
+function updateTime() {
+    const now = new Date();
+    document.getElementById('currentTime').textContent =
+        now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// ===== SAHIFA =====
+const pageTitles = {
+    'yangi-buyurtma': '📝 Yangi Buyurtma',
+    'mening-buyurtmalarim': '📋 Mening Buyurtmalarim',
+    'xabarlar': '💬 Oshpazdan Xabarlar',
+    'menyu-korish': '🍴 Menyu Ko\'rish'
+};
+
+function showPage(id, el) {
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.getElementById('pageTitle').textContent = pageTitles[id] || id;
+
+    if (id === 'mening-buyurtmalarim') renderMyOrders();
+    if (id === 'xabarlar') { renderMessages(); markAllRead(); }
+    if (id === 'menyu-korish') renderViewMenu();
+}
+
+// ===== STOLLAR =====
+function renderTables() {
+    const grid = document.getElementById('tableGrid');
+    grid.innerHTML = '';
+    for (let i = 1; i <= 12; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'table-btn' + (selectedTable === i ? ' selected' : '');
+        btn.innerHTML = `<span class="tbl-icon">🪑</span>${i}-stol`;
+        btn.onclick = () => selectTable(i);
+        grid.appendChild(btn);
+    }
+}
+
+function selectTable(num) {
+    selectedTable = num;
+    document.getElementById('selectedTableLabel').textContent = num + '-stol tanlandi';
+    renderTables();
+    showToast('info', `🪑 ${num}-stol tanlandi`);
+}
+
+// ===== MENYU =====
+function getCategories(menu) {
+    const cats = ['Barchasi', ...new Set(menu.filter(m => m.active).map(m => m.category))];
+    return cats;
+}
+
+function renderCategoryTabs() {
+    const menu = getMenu().filter(m => m.active);
+    const cats = getCategories(menu);
+    const tabs = document.getElementById('categoryTabs');
+    tabs.innerHTML = '';
+    cats.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-tab' + (currentCategory === cat ? ' active' : '');
+        btn.textContent = cat;
+        btn.onclick = () => { currentCategory = cat; renderCategoryTabs(); renderMenuGrid(); };
+        tabs.appendChild(btn);
+    });
+}
+
+function renderMenuGrid() {
+    const menu = getMenu().filter(m => m.active);
+    const filtered = currentCategory === 'Barchasi' ? menu : menu.filter(m => m.category === currentCategory);
+    const grid = document.getElementById('menuGrid');
+    grid.innerHTML = '';
+    if (filtered.length === 0) {
+        grid.innerHTML = '<p style="color:#aaa;text-align:center;padding:30px;">Bu kategoriyada taom yo\'q</p>';
+        return;
+    }
+    filtered.forEach(item => {
+        const inCart = cart.find(c => c.item.id === item.id);
+        const div = document.createElement('div');
+        div.className = 'menu-item-card' + (inCart ? ' selected' : '');
+        div.innerHTML = `
+            <span class="item-emoji">${item.emoji}</span>
+            <div class="item-name">${item.name}</div>
+            <div class="item-price">${formatPrice(item.price)}</div>
+            <div class="item-category">${item.category}</div>
+            ${inCart ? `<div style="margin-top:6px;font-size:12px;font-weight:700;color:#667eea;">✅ Savatda: ${inCart.qty} ta</div>` : ''}
+        `;
+        div.onclick = () => addToCart(item);
+        grid.appendChild(div);
+    });
+}
+
+function addToCart(item) {
+    const idx = cart.findIndex(c => c.item.id === item.id);
+    if (idx >= 0) {
+        cart[idx].qty++;
+    } else {
+        cart.push({ item, qty: 1 });
+    }
+    renderCart();
+    renderMenuGrid();
+    showToast('success', `✅ ${item.name} savatga qo'shildi`);
+}
+
+function removeFromCart(itemId) {
+    cart = cart.filter(c => c.item.id !== itemId);
+    renderCart();
+    renderMenuGrid();
+}
+
+function changeQty(itemId, delta) {
+    const idx = cart.findIndex(c => c.item.id === itemId);
+    if (idx < 0) return;
+    cart[idx].qty += delta;
+    if (cart[idx].qty <= 0) {
+        cart.splice(idx, 1);
+    }
+    renderCart();
+    renderMenuGrid();
+}
+
+function clearCart() {
+    cart = [];
+    renderCart();
+    renderMenuGrid();
+}
+
+function renderCart() {
+    const container = document.getElementById('cartItems');
+    const totalDiv = document.getElementById('cartTotal');
+
+    if (cart.length === 0) {
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">🛒</span><p>Savat bo'sh</p></div>`;
+        totalDiv.classList.add('hidden');
+        return;
+    }
+
+    totalDiv.classList.remove('hidden');
+    let total = 0;
+    let html = '';
+    cart.forEach(c => {
+        const subtotal = c.item.price * c.qty;
+        total += subtotal;
+        html += `
+        <div class="cart-item">
+            <div>
+                <div class="cart-item-name">${c.item.emoji} ${c.item.name}</div>
+                <div class="cart-item-price">${formatPrice(subtotal)}</div>
+            </div>
+            <div class="qty-control">
+                <button class="qty-btn" onclick="changeQty(${c.item.id}, -1)">−</button>
+                <span class="qty-num">${c.qty}</span>
+                <button class="qty-btn" onclick="changeQty(${c.item.id}, 1)">+</button>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+    document.getElementById('totalPrice').textContent = formatPrice(total);
+}
+
+// ===== BUYURTMA YUBORISH =====
+function submitOrder() {
+    if (!selectedTable) {
+        showToast('error', '⚠️ Avval stol tanlang!');
+        return;
+    }
+    if (cart.length === 0) {
+        showToast('error', '⚠️ Savatga taom qo\'shing!');
+        return;
+    }
+
+    const orders = getOrders();
+    const newOrder = {
+        id: generateOrderId(),
+        tableNum: selectedTable,
+        items: cart.map(c => ({ id: c.item.id, name: c.item.name, emoji: c.item.emoji, price: c.item.price, qty: c.qty })),
+        total: cart.reduce((s, c) => s + c.item.price * c.qty, 0),
+        note: document.getElementById('orderNote').value.trim(),
+        status: 'yangi',
+        waiterId: currentUser.username,
+        waiterName: currentUser.name,
+        time: new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }),
+        date: new Date().toLocaleDateString('uz-UZ'),
+        timestamp: Date.now()
+    };
+
+    orders.push(newOrder);
+    saveOrders(orders);
+
+    // Oshpazga bildirishnoma
+    addNotification('chef',
+        `📋 Yangi buyurtma ${newOrder.id}`,
+        `${newOrder.tableNum}-stol | ${newOrder.waiterName} | ${formatPrice(newOrder.total)}`,
+        newOrder.id
+    );
+
+    showToast('success', `✅ Buyurtma ${newOrder.id} oshpazga yuborildi!`);
+
+    // Tozalash
+    cart = [];
+    selectedTable = null;
+    document.getElementById('orderNote').value = '';
+    renderTables();
+    renderCart();
+    renderMenuGrid();
+    document.getElementById('selectedTableLabel').textContent = 'Tanlanmagan';
+}
+
+// ===== MENING BUYURTMALARIM =====
+function renderMyOrders() {
+    const orders = getOrders().filter(o => o.waiterId === currentUser.username);
+    const filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
+    const sorted = filtered.sort((a, b) => b.timestamp - a.timestamp);
+    const container = document.getElementById('myOrdersList');
+
+    if (sorted.length === 0) {
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">📋</span><p>Buyurtma topilmadi</p></div>`;
+        return;
+    }
+
+    container.innerHTML = sorted.map(o => `
+        <div class="order-card status-${o.status}">
+            <div class="order-header">
+                <span class="order-id">${o.id}</span>
+                <span class="order-table">🪑 ${o.tableNum}-stol</span>
+                <span class="order-time">🕐 ${o.time}</span>
+                <span class="status-badge status-${o.status}">${statusText(o.status)}</span>
+            </div>
+            <div class="order-body">
+                <ul class="order-items-list">
+                    ${o.items.map(i => `<li><span>${i.emoji} ${i.name} × ${i.qty}</span><span>${formatPrice(i.price * i.qty)}</span></li>`).join('')}
+                </ul>
+                ${o.note ? `<div class="order-note">💬 "${o.note}"</div>` : ''}
+            </div>
+            <div class="order-footer">
+                <span class="order-total">💰 ${formatPrice(o.total)}</span>
+                ${o.status === 'tayyor' ?
+                    `<button class="btn btn-sm btn-success" onclick="markAsDelivered('${o.id}')">✅ Berildi</button>` :
+                    o.status === 'berildi' ? `<span style="color:#27ae60;font-weight:700;">✅ Berildi</span>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function filterOrders(status, el) {
+    currentFilter = status;
+    document.querySelectorAll('#page-mening-buyurtmalarim .cat-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderMyOrders();
+}
+
+function statusText(s) {
+    const map = { yangi: '🔵 Yangi', tayyorlanmoqda: '🟡 Tayyorlanmoqda', tayyor: '🟢 Tayyor!', berildi: '⚫ Berildi' };
+    return map[s] || s;
+}
+
+function markAsDelivered(orderId) {
+    pendingDoneOrderId = orderId;
+    const order = getOrders().find(o => o.id === orderId);
+    document.getElementById('orderDoneBody').innerHTML = `
+        <p style="margin-bottom:15px;">Quyidagi buyurtma berilganligini tasdiqlaysizmi?</p>
+        <div style="background:#f8f9fa;border-radius:10px;padding:15px;">
+            <strong>${order.id}</strong> — ${order.tableNum}-stol<br>
+            <strong>${formatPrice(order.total)}</strong>
+        </div>
+    `;
+    document.getElementById('orderDoneModal').classList.add('open');
+}
+
+function confirmOrderDone() {
+    const orders = getOrders();
+    const idx = orders.findIndex(o => o.id === pendingDoneOrderId);
+    if (idx >= 0) {
+        orders[idx].status = 'berildi';
+        saveOrders(orders);
+        showToast('success', '✅ Buyurtma berildi deb belgilandi!');
+    }
+    closeModal('orderDoneModal');
+    renderMyOrders();
+}
+
+// ===== XABARLAR =====
+function renderMessages() {
+    const notifs = getNotifications().filter(n => n.role === 'waiter');
+    const container = document.getElementById('messagesList');
+    if (notifs.length === 0) {
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">💬</span><p>Xabar yo'q</p></div>`;
+        return;
+    }
+    container.innerHTML = notifs.map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'}" style="margin-bottom:12px;">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-text">${n.text}</div>
+            <div class="notif-time">🕐 ${n.time}</div>
+        </div>
+    `).join('');
+}
+
+function markAllRead() {
+    const notifs = getNotifications();
+    notifs.forEach(n => { if (n.role === 'waiter') n.read = true; });
+    saveNotifications(notifs);
+    updateNotifBadge();
+    renderMessages();
+}
+
+// ===== MENYU KO'RISH =====
+let viewCategory = 'Barchasi';
+function renderViewMenu() {
+    const menu = getMenu().filter(m => m.active);
+    const cats = getCategories(menu);
+    const tabsEl = document.getElementById('viewCategoryTabs');
+    tabsEl.innerHTML = '';
+    cats.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-tab' + (viewCategory === cat ? ' active' : '');
+        btn.textContent = cat;
+        btn.onclick = () => { viewCategory = cat; renderViewMenu(); };
+        tabsEl.appendChild(btn);
+    });
+
+    const filtered = viewCategory === 'Barchasi' ? menu : menu.filter(m => m.category === viewCategory);
+    const grid = document.getElementById('viewMenuGrid');
+    grid.innerHTML = '';
+    filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'menu-item-card';
+        div.style.cursor = 'default';
+        div.innerHTML = `
+            <span class="item-emoji">${item.emoji}</span>
+            <div class="item-name">${item.name}</div>
+            <div class="item-price">${formatPrice(item.price)}</div>
+            <div class="item-category">${item.category}</div>
+        `;
+        grid.appendChild(div);
+    });
+}
+
+// ===== BILDIRISHNOMALAR =====
+function updateNotifBadge() {
+    const count = getNotifications().filter(n => n.role === 'waiter' && !n.read).length;
+    const badge = document.getElementById('notifBadge');
+    const sidebarCount = document.getElementById('sidebarNotifCount');
+    if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'flex';
+        sidebarCount.textContent = count;
+        sidebarCount.style.display = 'inline';
+    } else {
+        badge.style.display = 'none';
+        sidebarCount.style.display = 'none';
+    }
+}
+
+function toggleNotifPanel() {
+    document.getElementById('notifPanel').classList.toggle('open');
+    renderNotifPanel();
+}
+
+function renderNotifPanel() {
+    const notifs = getNotifications().filter(n => n.role === 'waiter');
+    const list = document.getElementById('notifList');
+    if (notifs.length === 0) {
+        list.innerHTML = `<div class="empty-state"><span class="empty-icon">🔔</span><p>Bildirishnoma yo'q</p></div>`;
+        return;
+    }
+    list.innerHTML = notifs.map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'}">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-text">${n.text}</div>
+            <div class="notif-time">🕐 ${n.time}</div>
+        </div>
+    `).join('');
+}
+
+// ===== MODAL =====
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+
+// ===== TOAST =====
+function showToast(type, msg) {
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icons[type] || '💬'}</span> ${msg}`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ===== REAL-TIME YANGILASH =====
+setInterval(() => {
+    updateNotifBadge();
+    // Agar mening buyurtmalarim sahifasi ochiq bo'lsa, yangila
+    if (document.getElementById('page-mening-buyurtmalarim').classList.contains('active')) {
+        renderMyOrders();
+    }
+}, 3000);
+
+// ===== ISHGA TUSHIRISH =====
+renderTables();
+renderCategoryTabs();
+renderMenuGrid();
+updateNotifBadge();
+</script>
+</body>
+</html>

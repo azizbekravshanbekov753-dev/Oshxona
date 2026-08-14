@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Restoran</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Admin maxsus stillari */
+        .admin-stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 22px 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            transition: transform 0.3s;
+            border-left: 5px solid transparent;
+        }
+        .admin-stat-card:hover { transform: translateY(-4px); }
+        .admin-stat-card.blue { border-left-color: #3498db; }
+        .admin-stat-card.green { border-left-color: #27ae60; }
+        .admin-stat-card.orange { border-left-color: #f39c12; }
+        .admin-stat-card.purple { border-left-color: #9b59b6; }
+        .admin-stat-card.red { border-left-color: #e74c3c; }
+
+        .admin-stat-icon {
+            width: 58px; height: 58px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; flex-shrink: 0;
+        }
+        .bg-blue { background: #ebf5fb; }
+        .bg-green { background: #eafaf1; }
+        .bg-orange { background: #fef9e7; }
+        .bg-purple { background: #f5eef8; }
+        .bg-red { background: #fdedec; }
+
+        .admin-stat-info .val {
+            font-size: 30px; font-weight: 800;
+            color: var(--secondary); line-height: 1;
+        }
+        .admin-stat-info .lbl {
+            font-size: 13px; color: #888; margin-top: 4px;
+        }
+        .admin-stat-info .sub {
+            font-size: 12px; color: #aaa; margin-top: 2px;
+        }
+
+        /* Menyu boshqaruv */
+        .menu-admin-table { width: 100%; border-collapse: collapse; }
+        .menu-admin-table th, .menu-admin-table td {
+            padding: 13px 15px; text-align: left;
+            border-bottom: 1px solid #f0f0f0; font-size: 14px;
+        }
+        .menu-admin-table th {
+            background: #f8f9fa; font-weight: 700;
+            color: #555; font-size: 12px; text-transform: uppercase;
+        }
+        .menu-admin-table tr:hover td { background: #fafafa; }
+        .menu-admin-table .emoji-col { font-size: 24px; }
+
+        /* Toggle switch */
+        .toggle-switch {
+            position: relative; width: 48px; height: 26px;
+            display: inline-block;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #ccc; border-radius: 26px;
+            transition: 0.3s;
+        }
+        .toggle-slider:before {
+            position: absolute; content: "";
+            height: 20px; width: 20px; left: 3px; bottom: 3px;
+            background: white; border-radius: 50%;
+            transition: 0.3s;
+        }
+        input:checked + .toggle-slider { background: #27ae60; }
+        input:checked + .toggle-slider:before { transform: translateX(22px); }
+
+        /* Jadval keng */
+        .orders-full-table { width: 100%; border-collapse: collapse; }
+        .orders-full-table th, .orders-full-table td {
+            padding: 11px 14px; text-align: left;
+            border-bottom: 1px solid #f0f0f0; font-size: 13px;
+        }
+        .orders-full-table th {
+            background: #f8f9fa; font-weight: 700;
+            color: #555; font-size: 12px; text-transform: uppercase;
+        }
+        .orders-full-table tr:hover td { background: #fafafa; }
+
+        /* Chart qatorlari */
+        .top-items-list { display: flex; flex-direction: column; gap: 14px; }
+        .top-item-row { display: flex; align-items: center; gap: 12px; }
+        .top-item-rank {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #667eea; color: white;
+            font-weight: 700; font-size: 13px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .top-item-rank.gold { background: #f1c40f; color: #333; }
+        .top-item-rank.silver { background: #95a5a6; }
+        .top-item-rank.bronze { background: #ca6f1e; }
+
+        .top-item-bar-wrap { flex: 1; }
+        .top-item-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+        .top-item-bar-track {
+            height: 22px; background: #f0f0f0;
+            border-radius: 11px; overflow: hidden;
+        }
+        .top-item-bar-fill {
+            height: 100%; border-radius: 11px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            display: flex; align-items: center;
+            padding-left: 8px; font-size: 11px;
+            font-weight: 700; color: white;
+            transition: width 1s ease;
+        }
+        .top-item-count {
+            min-width: 50px; text-align: right;
+            font-weight: 700; font-size: 13px; color: var(--secondary);
+        }
+
+        /* Daromad grafigi */
+        .revenue-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        .rev-col {
+            background: #f8f9fa; border-radius: 10px;
+            padding: 12px; text-align: center;
+            border: 2px solid #e0e0e0; transition: all 0.3s;
+        }
+        .rev-col:hover { border-color: #667eea; background: #f0f0ff; }
+        .rev-col .rev-hour { font-size: 12px; color: #888; margin-bottom: 6px; }
+        .rev-col .rev-amount { font-weight: 800; font-size: 15px; color: var(--secondary); }
+        .rev-col .rev-count { font-size: 11px; color: #aaa; margin-top: 3px; }
+
+        /* Password o'zgartirish */
+        .settings-form { max-width: 500px; }
+
+        /* Modal katta */
+        .modal-lg { max-width: 650px; }
+    </style>
+</head>
+<body>
+<div class="panel-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="logo">🍽️</span>
+            <h2>Restoran</h2>
+            <span class="role-badge role-admin">👤 Admin</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="active" onclick="showPage('dashboard', this)">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+            <a onclick="showPage('buyurtmalar', this)">
+                <span class="nav-icon">📋</span> Barcha Buyurtmalar
+            </a>
+            <a onclick="showPage('menyu', this)">
+                <span class="nav-icon">🍴</span> Menyu Boshqaruv
+            </a>
+            <a onclick="showPage('daromad', this)">
+                <span class="nav-icon">💰</span> Daromad & Statistika
+            </a>
+            <a onclick="showPage('sozlamalar', this)">
+                <span class="nav-icon">⚙️</span> Sozlamalar
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">👤</div>
+                <div class="user-details">
+                    <div class="name" id="userName">Admin</div>
+                    <div class="role">Bosh Administrator</div>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()">🚪 Chiqish</button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <div class="top-bar">
+            <h1 id="pageTitle">📊 Dashboard</h1>
+            <div class="top-bar-right">
+                <span id="currentDate" style="font-size:13px;color:#888;"></span>
+                <span id="currentTime" style="font-size:13px;color:#888;margin-left:10px;"></span>
+            </div>
+        </div>
+
+        <div class="page-content">
+
+            <!-- ========== DASHBOARD ========== -->
+            <div class="page-section active" id="page-dashboard">
+
+                <!-- Asosiy statistikalar -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:28px;" id="mainStats"></div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;margin-bottom:25px;" class="responsive-two-col">
+                    <!-- Eng ko'p buyurtilgan taomlar -->
+                    <div class="card">
+                        <div class="card-header"><h3>🏆 Top 5 Taom</h3></div>
+                        <div class="card-body">
+                            <div class="top-items-list" id="topItemsList"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bugungi buyurtmalar holati -->
+                    <div class="card">
+                        <div class="card-header"><h3>📈 Bugungi Holat</h3></div>
+                        <div class="card-body">
+                            <div id="todayStatus"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Oxirgi buyurtmalar -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🕐 Oxirgi Buyurtmalar</h3>
+                        <button class="btn btn-sm btn-secondary" onclick="showPage('buyurtmalar', document.querySelectorAll('.sidebar-nav a')[1])">Barchasini ko'rish →</button>
+                    </div>
+                    <div class="card-body" style="overflow-x:auto;">
+                        <table class="orders-full-table" id="recentOrdersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th><th>Stol</th><th>Taomlar</th>
+                                    <th>Jami</th><th>Vaqt</th><th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentOrdersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== BARCHA BUYURTMALAR ========== -->
+            <div class="page-section" id="page-buyurtmalar">
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                        <strong>Filtr:</strong>
+                        <button class="cat-tab active" onclick="filterAllOrders('all', this)">Barchasi</button>
+                        <button class="cat-tab" onclick="filterAllOrders('yangi', this)">🔵 Yangi</button>
+                        <button class="cat-tab" onclick="filterAllOrders('tayyorlanmoqda', this)">🟡 Tayyorlanmoqda</button>
+                        <button class="cat-tab" onclick="filterAllOrders('tayyor', this)">🟢 Tayyor</button>
+                        <button class="cat-tab" onclick="filterAllOrders('berildi', this)">⚫ Berildi</button>
+                        <div style="margin-left:auto;font-weight:700;color:#888;" id="allOrdersCount"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body" style="overflow-x:auto;">
+                        <table class="orders-full-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th><th>Stol</th><th>Ofisant</th>
+                                    <th>Taomlar</th><th>Jami</th><th>Vaqt</th><th>Status</th><th>Amal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allOrdersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== MENYU BOSHQARUV ========== -->
+            <div class="page-section" id="page-menyu">
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;" id="menuFilterTabs"></div>
+                        <button class="btn btn-primary" onclick="openAddItemModal()" style="width:auto;">
+                            ➕ Yangi Taom Qo'shish
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body" style="overflow-x:auto;">
+                        <table class="menu-admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Emoji</th><th>Nomi</th><th>Kategoriya</th>
+                                    <th>Narxi</th><th>Holati</th><th>Amallar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menuAdminBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== DAROMAD & STATISTIKA ========== -->
+            <div class="page-section" id="page-daromad">
+                <!-- Jami -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:28px;" id="revenueStats"></div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;margin-bottom:25px;">
+                    <!-- Kategoriya bo'yicha daromad -->
+                    <div class="card">
+                        <div class="card-header"><h3>🍴 Kategoriya bo'yicha</h3></div>
+                        <div class="card-body">
+                            <div id="categoryRevenueChart"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stol bo'yicha -->
+                    <div class="card">
+                        <div class="card-header"><h3>🪑 Stol bo'yicha daromad</h3></div>
+                        <div class="card-body">
+                            <div id="tableRevenueChart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soatlik daromad -->
+                <div class="card">
+                    <div class="card-header"><h3>⏰ Soatlik Faollik</h3></div>
+                    <div class="card-body">
+                        <div class="revenue-grid" id="hourlyRevenue"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== SOZLAMALAR ========== -->
+            <div class="page-section" id="page-sozlamalar">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;flex-wrap:wrap;">
+
+                    <!-- Restoran ma'lumotlari -->
+                    <div class="card">
+                        <div class="card-header"><h3>🏪 Restoran Ma'lumotlari</h3></div>
+                        <div class="card-body settings-form">
+                            <div class="form-group">
+                                <label>Restoran nomi</label>
+                                <input type="text" id="settRestName" placeholder="Restoran nomi">
+                            </div>
+                            <div class="form-group">
+                                <label>Manzil</label>
+                                <input type="text" id="settAddress" placeholder="Manzil">
+                            </div>
+                            <div class="form-group">
+                                <label>Telefon</label>
+                                <input type="text" id="settPhone" placeholder="+998 xx xxx xx xx">
+                            </div>
+                            <div class="form-group">
+                                <label>Stollar soni</label>
+                                <input type="number" id="settTables" min="1" max="50" value="12">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSettings()" style="width:auto;">
+                                💾 Saqlash
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ma'lumotlarni tozalash -->
+                    <div class="card">
+                        <div class="card-header"><h3>🗑️ Ma'lumotlar Boshqaruvi</h3></div>
+                        <div class="card-body">
+                            <p style="color:#888;font-size:14px;margin-bottom:20px;">
+                                Quyidagi amallar qaytarib bo'lmaydigan o'zgarishlar qiladi. Ehtiyot bo'ling!
+                            </p>
+                            <div style="display:flex;flex-direction:column;gap:12px;">
+                                <button class="btn btn-warning" onclick="clearOrders()">
+                                    🗑️ Berilgan buyurtmalarni tozalash
+                                </button>
+                                <button class="btn btn-secondary" onclick="clearNotifications()">
+                                    🔕 Bildirishnomalarni tozalash
+                                </button>
+                                <button class="btn btn-danger" onclick="resetAllData()">
+                                    ⚠️ Barcha ma'lumotlarni o'chirish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Foydalanuvchilar -->
+                    <div class="card">
+                        <div class="card-header"><h3>👥 Foydalanuvchilar</h3></div>
+                        <div class="card-body">
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr style="background:#f8f9fa;">
+                                        <th style="padding:10px;text-align:left;font-size:13px;">Rol</th>
+                                        <th style="padding:10px;text-align:left;font-size:13px;">Login</th>
+                                        <th style="padding:10px;text-align:left;font-size:13px;">Parol</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding:10px;">🧑‍💼 Ofisant</td>
+                                        <td style="padding:10px;"><code>afisant</code></td>
+                                        <td style="padding:10px;"><code>afisant123</code></td>
+                                    </tr>
+                                    <tr style="background:#fafafa;">
+                                        <td style="padding:10px;">👨‍🍳 Oshpaz</td>
+                                        <td style="padding:10px;"><code>oshpaz</code></td>
+                                        <td style="padding:10px;"><code>oshpaz123</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:10px;">👤 Admin</td>
+                                        <td style="padding:10px;"><code>admin</code></td>
+                                        <td style="padding:10px;"><code>admin123</code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Statistika xulosasi -->
+                    <div class="card">
+                        <div class="card-header"><h3>📊 Tizim Ma'lumotlari</h3></div>
+                        <div class="card-body" id="sysInfo"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MODAL: Taom qo'shish/tahrirlash -->
+<div class="modal-overlay" id="itemModal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3 id="itemModalTitle">➕ Yangi Taom Qo'shish</h3>
+            <button class="modal-close" onclick="closeModal('itemModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                <div class="form-group">
+                    <label>🍽️ Taom nomi</label>
+                    <input type="text" id="itemName" placeholder="Masalan: Osh">
+                </div>
+                <div class="form-group">
+                    <label>😊 Emoji</label>
+                    <input type="text" id="itemEmoji" placeholder="Masalan: 🍚" maxlength="4">
+                </div>
+                <div class="form-group">
+                    <label>💰 Narxi (so'm)</label>
+                    <input type="number" id="itemPrice" placeholder="25000" min="0">
+                </div>
+                <div class="form-group">
+                    <label>📁 Kategoriya</label>
+                    <input type="text" id="itemCategory" placeholder="Asosiy taomlar" list="catList">
+                    <datalist id="catList"></datalist>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('itemModal')">Bekor qilish</button>
+            <button class="btn btn-success" onclick="saveMenuItem()">💾 Saqlash</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Tasdiqlash -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="confirmTitle">⚠️ Tasdiqlash</h3>
+            <button class="modal-close" onclick="closeModal('confirmModal')">✕</button>
+        </div>
+        <div class="modal-body" id="confirmBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Bekor qilish</button>
+            <button class="btn btn-danger" id="confirmBtn">Tasdiqlash</button>
+        </div>
+    </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+// ===== TEKSHIRISH =====
+const currentUser = getCurrentUser();
+if (!currentUser || currentUser.role !== 'admin') {
+    window.location.href = 'index.html';
+}
+document.getElementById('userName').textContent = currentUser.name;
+
+// ===== STATE =====
+let allOrdersFilter = 'all';
+let menuFilter = 'Barchasi';
+let editingItemId = null;
+
+// ===== VAQT =====
+function updateTime() {
+    const now = new Date();
+    document.getElementById('currentTime').textContent =
+        now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('currentDate').textContent =
+        now.toLocaleDateString('uz-UZ', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// ===== SAHIFA =====
+function showPage(id, el) {
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    const titles = {
+        dashboard: '📊 Dashboard',
+        buyurtmalar: '📋 Barcha Buyurtmalar',
+        menyu: '🍴 Menyu Boshqaruv',
+        daromad: '💰 Daromad & Statistika',
+        sozlamalar: '⚙️ Sozlamalar'
+    };
+    document.getElementById('pageTitle').textContent = titles[id] || id;
+
+    if (id === 'dashboard') renderDashboard();
+    if (id === 'buyurtmalar') renderAllOrders();
+    if (id === 'menyu') renderMenuAdmin();
+    if (id === 'daromad') renderRevenueStats();
+    if (id === 'sozlamalar') renderSysInfo();
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+    const orders = getOrders();
+    const today = new Date().toLocaleDateString('uz-UZ');
+    const todayOrders = orders.filter(o => o.date === today);
+    const todayRevenue = todayOrders.filter(o => o.status === 'berildi').reduce((s, o) => s + o.total, 0);
+    const totalRevenue = orders.filter(o => o.status === 'berildi').reduce((s, o) => s + o.total, 0);
+    const activeOrders = orders.filter(o => o.status !== 'berildi').length;
+    const totalDone = orders.filter(o => o.status === 'berildi').length;
+
+    // Asosiy kartalar
+    document.getElementById('mainStats').innerHTML = `
+        <div class="admin-stat-card blue">
+            <div class="admin-stat-icon bg-blue">💰</div>
+            <div class="admin-stat-info">
+                <div class="val">${formatPrice(todayRevenue)}</div>
+                <div class="lbl">Bugungi daromad</div>
+            </div>
+        </div>
+        <div class="admin-stat-card green">
+            <div class="admin-stat-icon bg-green">📦</div>
+            <div class="admin-stat-info">
+                <div class="val">${todayOrders.length}</div>
+                <div class="lbl">Bugungi buyurtmalar</div>
+            </div>
+        </div>
+        <div class="admin-stat-card orange">
+            <div class="admin-stat-icon bg-orange">🔥</div>
+            <div class="admin-stat-info">
+                <div class="val">${activeOrders}</div>
+                <div class="lbl">Faol buyurtmalar</div>
+            </div>
+        </div>
+        <div class="admin-stat-card purple">
+            <div class="admin-stat-icon bg-purple">✅</div>
+            <div class="admin-stat-info">
+                <div class="val">${totalDone}</div>
+                <div class="lbl">Jami berilgan</div>
+            </div>
+        </div>
+        <div class="admin-stat-card red">
+            <div class="admin-stat-icon bg-red">💎</div>
+            <div class="admin-stat-info">
+                <div class="val">${formatPrice(totalRevenue)}</div>
+                <div class="lbl">Jami daromad</div>
+            </div>
+        </div>
+    `;
+
+    // Top 5 taom
+    renderTopItems();
+
+    // Bugungi holat
+    renderTodayStatus(todayOrders);
+
+    // Oxirgi buyurtmalar
+    renderRecentOrders(orders.slice(-10).reverse());
+}
+
+function renderTopItems() {
+    const orders = getOrders().filter(o => o.status === 'berildi');
+    const itemCounts = {};
+    orders.forEach(o => {
+        o.items.forEach(i => {
+            itemCounts[i.name] = (itemCounts[i.name] || 0) + i.qty;
+        });
+    });
+
+    const sorted = Object.entries(itemCounts)
+        .sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+    const maxVal = sorted[0]?.[1] || 1;
+    const rankClasses = ['gold', 'silver', 'bronze', '', ''];
+
+    const container = document.getElementById('topItemsList');
+    if (sorted.length === 0) {
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">📊</span><p>Ma'lumot yo'q</p></div>`;
+        return;
+    }
+
+    container.innerHTML = sorted.map(([name, count], i) => {
+        const menu = getMenu().find(m => m.name === name);
+        const emoji = menu ? menu.emoji : '🍽️';
+        const pct = Math.round((count / maxVal) * 100);
+        return `
+        <div class="top-item-row">
+            <div class="top-item-rank ${rankClasses[i]}">${i + 1}</div>
+            <div class="top-item-bar-wrap">
+                <div class="top-item-name">${emoji} ${name}</div>
+                <div class="top-item-bar-track">
+                    <div class="top-item-bar-fill" style="width:${pct}%">${pct > 20 ? count + ' ta' : ''}</div>
+                </div>
+            </div>
+            <div class="top-item-count">${count} ta</div>
+        </div>`;
+    }).join('');
+}
+
+function renderTodayStatus(todayOrders) {
+    const statuses = ['yangi', 'tayyorlanmoqda', 'tayyor', 'berildi'];
+    const labels = { yangi: '🔵 Yangi', tayyorlanmoqda: '🟡 Tayyorlanmoqda', tayyor: '🟢 Tayyor', berildi: '⚫ Berildi' };
+    const colors = { yangi: '#3498db', tayyorlanmoqda: '#f39c12', tayyor: '#27ae60', berildi: '#95a5a6' };
+
+    const container = document.getElementById('todayStatus');
+    if (todayOrders.length === 0) {
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">📈</span><p>Bugun buyurtma yo'q</p></div>`;
+        return;
+    }
+
+    container.innerHTML = statuses.map(s => {
+        const count = todayOrders.filter(o => o.status === s).length;
+        const pct = Math.round((count / todayOrders.length) * 100);
+        return `
+        <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                <span style="font-weight:600;font-size:14px;">${labels[s]}</span>
+                <span style="font-weight:700;font-size:14px;">${count} ta (${pct}%)</span>
+            </div>
+            <div style="height:10px;background:#f0f0f0;border-radius:5px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:${colors[s]};border-radius:5px;transition:width 1s;"></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderRecentOrders(orders) {
+    if (orders.length === 0) {
+        document.getElementById('recentOrdersBody').innerHTML =
+            `<tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px;">Buyurtma yo'q</td></tr>`;
+        return;
+    }
+    document.getElementById('recentOrdersBody').innerHTML = orders.slice(0, 8).map(o => `
+        <tr>
+            <td><strong>${o.id}</strong></td>
+            <td>🪑 ${o.tableNum}-stol</td>
+            <td style="max-width:200px;">${o.items.slice(0, 2).map(i => i.emoji + ' ' + i.name).join(', ')}${o.items.length > 2 ? '...' : ''}</td>
+            <td><strong style="color:#27ae60;">${formatPrice(o.total)}</strong></td>
+            <td>🕐 ${o.time}</td>
+            <td><span class="status-badge status-${o.status}">${statusText(o.status)}</span></td>
+        </tr>
+    `).join('');
+}
+
+// ===== BARCHA BUYURTMALAR =====
+function renderAllOrders() {
+    const orders = getOrders();
+    const filtered = allOrdersFilter === 'all' ? orders : orders.filter(o => o.status === allOrdersFilter);
+    const sorted = [...filtered].sort((a, b) => b.timestamp - a.timestamp);
+
+    document.getElementById('allOrdersCount').textContent = `${sorted.length} ta buyurtma`;
+
+    if (sorted.length === 0) {
+        document.getElementById('allOrdersBody').innerHTML =
+            `<tr><td colspan="8" style="text-align:center;color:#aaa;padding:30px;">Buyurtma topilmadi</td></tr>`;
+        return;
+    }
+
+    document.getElementById('allOrdersBody').innerHTML = sorted.map(o => `
+        <tr>
+            <td><strong>${o.id}</strong></td>
+            <td>🪑 ${o.tableNum}</td>
+            <td>👤 ${o.waiterName || o.waiterId}</td>
+            <td>${o.items.slice(0, 2).map(i => i.emoji + i.name + '×' + i.qty).join(', ')}${o.items.length > 2 ? '...' : ''}</td>
+            <td><strong style="color:#27ae60;">${formatPrice(o.total)}</strong></td>
+            <td>${o.time}</td>
+            <td><span class="status-badge status-${o.status}">${statusText(o.status)}</span></td>
+            <td>
+                ${o.status !== 'berildi' ?
+                    `<button class="btn btn-sm btn-danger" onclick="adminCancelOrder('${o.id}')">🗑️</button>` :
+                    '<span style="color:#aaa;font-size:12px;">—</span>'
+                }
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterAllOrders(status, el) {
+    allOrdersFilter = status;
+    document.querySelectorAll('#page-buyurtmalar .cat-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderAllOrders();
+}
+
+function adminCancelOrder(orderId) {
+    showConfirm(
+        '🗑️ Buyurtmani o\'chirish',
+        `<strong>${orderId}</strong> buyurtmasini o'chirishni tasdiqlaysizmi?`,
+        () => {
+            let orders = getOrders();
+            orders = orders.filter(o => o.id !== orderId);
+            saveOrders(orders);
+            showToast('success', `${orderId} o'chirildi`);
+            renderAllOrders();
+        }
+    );
+}
+
+function statusText(s) {
+    const map = { yangi: '🔵 Yangi', tayyorlanmoqda: '🟡 Tayyorlanmoqda', tayyor: '🟢 Tayyor', berildi: '⚫ Berildi' };
+    return map[s] || s;
+}
+
+// ===== MENYU BOSHQARUV =====
+function renderMenuAdmin() {
+    const menu = getMenu();
+    const cats = ['Barchasi', ...new Set(menu.map(m => m.category))];
+
+    // Filter tablar
+    const tabs = document.getElementById('menuFilterTabs');
+    tabs.innerHTML = '';
+    cats.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-tab' + (menuFilter === cat ? ' active' : '');
+        btn.textContent = cat + (cat !== 'Barchasi' ? ` (${menu.filter(m => m.category === cat).length})` : '');
+        btn.onclick = () => { menuFilter = cat; renderMenuAdmin(); };
+        tabs.appendChild(btn);
+    });
+
+    // Datalist for categories
+    const dl = document.getElementById('catList');
+    dl.innerHTML = cats.filter(c => c !== 'Barchasi').map(c => `<option value="${c}">`).join('');
+
+    // Filtered menu
+    const filtered = menuFilter === 'Barchasi' ? menu : menu.filter(m => m.category === menuFilter);
+
+    if (filtered.length === 0) {
+        document.getElementById('menuAdminBody').innerHTML =
+            `<tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px;">Taom yo'q</td></tr>`;
+        return;
+    }
+
+    document.getElementById('menuAdminBody').innerHTML = filtered.map(item => `
+        <tr>
+            <td class="emoji-col">${item.emoji}</td>
+            <td><strong>${item.name}</strong></td>
+            <td><span style="background:#f0f0f0;padding:3px 8px;border-radius:6px;font-size:12px;">${item.category}</span></td>
+            <td><strong style="color:#27ae60;">${formatPrice(item.price)}</strong></td>
+            <td>
+                <label class="toggle-switch">
+                    <input type="checkbox" ${item.active ? 'checked' : ''} onchange="toggleItemActive(${item.id}, this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+            </td>
+            <td>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-sm btn-warning" onclick="openEditModal(${item.id})">✏️ Tahrirlash</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${item.id})">🗑️</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function toggleItemActive(id, active) {
+    const menu = getMenu();
+    const idx = menu.findIndex(m => m.id === id);
+    if (idx >= 0) {
+        menu[idx].active = active;
+        saveMenu(menu);
+        showToast(active ? 'success' : 'warning', `${menu[idx].name} ${active ? 'yoqildi' : 'o\'chirildi'}`);
+    }
+}
+
+function openAddItemModal() {
+    editingItemId = null;
+    document.getElementById('itemModalTitle').textContent = '➕ Yangi Taom Qo\'shish';
+    document.getElementById('itemName').value = '';
+    document.getElementById('itemEmoji').value = '';
+    document.getElementById('itemPrice').value = '';
+    document.getElementById('itemCategory').value = '';
+    document.getElementById('itemModal').classList.add('open');
+}
+
+function openEditModal(id) {
+    const item = getMenu().find(m => m.id === id);
+    if (!item) return;
+    editingItemId = id;
+    document.getElementById('itemModalTitle').textContent = '✏️ Taomni Tahrirlash';
+    document.getElementById('itemName').value = item.name;
+    document.getElementById('itemEmoji').value = item.emoji;
+    document.getElementById('itemPrice').value = item.price;
+    document.getElementById('itemCategory').value = item.category;
+    document.getElementById('itemModal').classList.add('open');
+}
+
+function saveMenuItem() {
+    const name = document.getElementById('itemName').value.trim();
+    const emoji = document.getElementById('itemEmoji').value.trim() || '🍽️';
+    const price = parseInt(document.getElementById('itemPrice').value);
+    const category = document.getElementById('itemCategory').value.trim();
+
+    if (!name || !price || !category) {
+        showToast('error', '⚠️ Barcha maydonlarni to\'ldiring!');
+        return;
+    }
+    if (isNaN(price) || price <= 0) {
+        showToast('error', '⚠️ Narxni to\'g\'ri kiriting!');
+        return;
+    }
+
+    const menu = getMenu();
+    if (editingItemId) {
+        const idx = menu.findIndex(m => m.id === editingItemId);
+        if (idx >= 0) {
+            menu[idx] = { ...menu[idx], name, emoji, price, category };
+            saveMenu(menu);
+            showToast('success', `✅ ${name} yangilandi!`);
+        }
+    } else {
+        const newId = Math.max(...menu.map(m => m.id), 0) + 1;
+        menu.push({ id: newId, name, emoji, price, category, active: true });
+        saveMenu(menu);
+        showToast('success', `✅ ${name} qo'shildi!`);
+    }
+
+    closeModal('itemModal');
+    renderMenuAdmin();
+}
+
+function deleteMenuItem(id) {
+    const item = getMenu().find(m => m.id === id);
+    showConfirm(
+        '🗑️ Taomni o\'chirish',
+        `<strong>${item.emoji} ${item.name}</strong> ni menyudan o'chirishni tasdiqlaysizmi?`,
+        () => {
+            const menu = getMenu().filter(m => m.id !== id);
+            saveMenu(menu);
+            showToast('success', `${item.name} o'chirildi`);
+            renderMenuAdmin();
+        }
+    );
+}
+
+// ===== DAROMAD =====
+function renderRevenueStats() {
+    const orders = getOrders().filter(o => o.status === 'berildi');
+    const today = new Date().toLocaleDateString('uz-UZ');
+    const todayOrders = orders.filter(o => o.date === today);
+    const todayRevenue = todayOrders.reduce((s, o) => s + o.total, 0);
+    const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
+    const avgOrder = orders.length ? Math.round(totalRevenue / orders.length) : 0;
+
+    // Jami statistika
+    document.getElementById('revenueStats').innerHTML = `
+        <div class="admin-stat-card blue">
+            <div class="admin-stat-icon bg-blue">💰</div>
+            <div class="admin-stat-info">
+                <div class="val">${formatPrice(totalRevenue)}</div>
+                <div class="lbl">Jami daromad</div>
+            </div>
+        </div>
+        <div class="admin-stat-card green">
+            <div class="admin-stat-icon bg-green">📅</div>
+            <div class="admin-stat-info">
+                <div class="val">${formatPrice(todayRevenue)}</div>
+                <div class="lbl">Bugungi daromad</div>
+            </div>
+        </div>
+        <div class="admin-stat-card orange">
+            <div class="admin-stat-icon bg-orange">📊</div>
+            <div class="admin-stat-info">
+                <div class="val">${formatPrice(avgOrder)}</div>
+                <div class="lbl">O'rtacha buyurtma</div>
+            </div>
+        </div>
+        <div class="admin-stat-card purple">
+            <div class="admin-stat-icon bg-purple">🧾</div>
+            <div class="admin-stat-info">
+                <div class="val">${orders.length}</div>
+                <div class="lbl">Bajarilgan buyurtmalar</div>
+            </div>
+        </div>
+    `;
+
+    // Kategoriya bo'yicha daromad
+    renderCategoryRevenue(orders);
+
+    // Stol bo'yicha
+    renderTableRevenue(orders);
+
+    // Soatlik
+    renderHourlyRevenue(orders);
+}
+
+function renderCategoryRevenue(orders) {
+    const catRevenue = {};
+    orders.forEach(o => {
+        o.items.forEach(i => {
+            const menu = getMenu().find(m => m.name === i.name);
+            const cat = menu ? menu.category : 'Boshqa';
+            catRevenue[cat] = (catRevenue[cat] || 0) + i.price * i.qty;
+        });
+    });
+
+    const sorted = Object.entries(catRevenue).sort((a, b) => b[1] - a[1]);
+    const maxVal = sorted[0]?.[1] || 1;
+    const container = document.getElementById('categoryRevenueChart');
+
+    if (sorted.length === 0) {
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">💰</span><p>Ma'lumot yo'q</p></div>`;
+        return;
+    }
+
+    container.innerHTML = `<div class="chart-bar-container">` +
+        sorted.map(([cat, rev]) => {
+            const pct = Math.round((rev / maxVal) * 100);
+            return `
+            <div class="chart-bar-item">
+                <div class="chart-bar-label">${cat}</div>
+                <div class="chart-bar-track">
+                    <div class="chart-bar-fill" style="width:${pct}%">${pct > 25 ? formatPrice(rev) : ''}</div>
+                </div>
+                <div class="chart-bar-value">${formatPrice(rev)}</div>
+            </div>`;
+        }).join('') + `</div>`;
+}
+
+function renderTableRevenue(orders) {
+    const tableRevenue = {};
+    orders.forEach(o => {
+        const key = o.tableNum + '-stol';
+        tableRevenue[key] = (tableRevenue[key] || 0) + o.total;
+    });
+
+    const sorted = Object.entries(tableRevenue).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const maxVal = sorted[0]?.[1] || 1;
+    const container = document.getElementById('tableRevenueChart');
+
+    if (sorted.length === 0) {
+        container.innerHTML = `<div class="empty-state"><span class="empty-icon">🪑</span><p>Ma'lumot yo'q</p></div>`;
+        return;
+    }
+
+    container.innerHTML = `<div class="chart-bar-container">` +
+        sorted.map(([tbl, rev]) => {
+            const pct = Math.round((rev / maxVal) * 100);
+            return `
+            <div class="chart-bar-item">
+                <div class="chart-bar-label">🪑 ${tbl}</div>
+                <div class="chart-bar-track">
+                    <div class="chart-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,#27ae60,#1a8a4a)">${pct > 30 ? formatPrice(rev) : ''}</div>
+                </div>
+                <div class="chart-bar-value">${formatPrice(rev)}</div>
+            </div>`;
+        }).join('') + `</div>`;
+}
+
+function renderHourlyRevenue(orders) {
+    const hourly = {};
+    orders.forEach(o => {
+        if (!o.time) return;
+        const hour = o.time.split(':')[0];
+        if (!hourly[hour]) hourly[hour] = { rev: 0, count: 0 };
+        hourly[hour].rev += o.total;
+        hourly[hour].count++;
+    });
+
+    const container = document.getElementById('hourlyRevenue');
+    if (Object.keys(hourly).length === 0) {
+        container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span class="empty-icon">⏰</span><p>Ma'lumot yo'q</p></div>`;
+        return;
+    }
+
+    const hours = Array.from({ length: 14 }, (_, i) => String(i + 9).padStart(2, '0'));
+    container.innerHTML = hours.map(h => {
+        const data = hourly[h] || { rev: 0, count: 0 };
+        return `
+        <div class="rev-col ${data.rev > 0 ? '' : 'opacity:0.4'}">
+            <div class="rev-hour">${h}:00</div>
+            <div class="rev-amount">${data.rev > 0 ? formatPrice(data.rev) : '—'}</div>
+            <div class="rev-count">${data.count > 0 ? data.count + ' ta' : ''}</div>
+        </div>`;
+    }).join('');
+}
+
+// ===== SOZLAMALAR =====
+function renderSysInfo() {
+    const orders = getOrders();
+    const menu = getMenu();
+    const notifs = getNotifications();
+    document.getElementById('sysInfo').innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+                <span style="color:#888;">Jami buyurtmalar:</span>
+                <strong>${orders.length} ta</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+                <span style="color:#888;">Aktiv buyurtmalar:</span>
+                <strong>${orders.filter(o => o.status !== 'berildi').length} ta</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+                <span style="color:#888;">Menyu elementlari:</span>
+                <strong>${menu.length} ta (${menu.filter(m => m.active).length} ta aktiv)</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+                <span style="color:#888;">Bildirishnomalar:</span>
+                <strong>${notifs.length} ta</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;">
+                <span style="color:#888;">Versiya:</span>
+                <strong>v1.0.0</strong>
+            </div>
+        </div>
+    `;
+}
+
+function saveSettings() {
+    const name = document.getElementById('settRestName').value.trim();
+    const address = document.getElementById('settAddress').value.trim();
+    const phone = document.getElementById('settPhone').value.trim();
+    const tables = document.getElementById('settTables').value;
+
+    localStorage.setItem('restoran_settings', JSON.stringify({ name, address, phone, tables }));
+    showToast('success', '✅ Sozlamalar saqlandi!');
+}
+
+function clearOrders() {
+    showConfirm('🗑️ Berilgan buyurtmalarni tozalash',
+        'Barcha "Berildi" statusli buyurtmalar o\'chiriladi. Bu amalni qaytarib bo\'lmaydi!',
+        () => {
+            const orders = getOrders().filter(o => o.status !== 'berildi');
+            saveOrders(orders);
+            showToast('success', '✅ Berilgan buyurtmalar tozalandi');
+        }
+    );
+}
+
+function clearNotifications() {
+    showConfirm('🔕 Bildirishnomalarni tozalash',
+        'Barcha bildirishnomalar o\'chiriladi.',
+        () => {
+            saveNotifications([]);
+            showToast('success', '✅ Bildirishnomalar tozalandi');
+        }
+    );
+}
+
+function resetAllData() {
+    showConfirm('⚠️ BARCHA MA\'LUMOTLARNI O\'CHIRISH',
+        '<strong style="color:red;">DIQQAT!</strong> Barcha buyurtmalar, bildirishnomalar va menyu o\'zgartirishlari o\'chiriladi. Bu amalni QAYTARIB BO\'LMAYDI!',
+        () => {
+            localStorage.removeItem('restoran_orders');
+            localStorage.removeItem('restoran_notifications');
+            localStorage.removeItem('restoran_menu');
+            showToast('warning', '⚠️ Barcha ma\'lumotlar tozalandi');
+            setTimeout(() => renderDashboard(), 500);
+        }
+    );
+}
+
+// ===== MODAL =====
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+
+function showConfirm(title, body, onConfirm) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmBody').innerHTML = `<p style="color:#555;font-size:14px;line-height:1.6;">${body}</p>`;
+    document.getElementById('confirmBtn').onclick = () => {
+        onConfirm();
+        closeModal('confirmModal');
+    };
+    document.getElementById('confirmModal').classList.add('open');
+}
+
+// ===== TOAST =====
+function showToast(type, msg) {
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${icons[type] || '💬'}</span> ${msg}`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
+// ===== REAL-TIME =====
+setInterval(() => {
+    if (document.getElementById('page-dashboard').classList.contains('active')) {
+        renderDashboard();
+    }
+    if (document.getElementById('page-buyurtmalar').classList.contains('active')) {
+        renderAllOrders();
+    }
+}, 5000);
+
+// ===== ISHGA TUSHIRISH =====
+renderDashboard();
+
+// Sozlamalarni yuklash
+const savedSettings = localStorage.getItem('restoran_settings');
+if (savedSettings) {
+    const s = JSON.parse(savedSettings);
+    document.getElementById('settRestName').value = s.name || '';
+    document.getElementById('settAddress').value = s.address || '';
+    document.getElementById('settPhone').value = s.phone || '';
+    document.getElementById('settTables').value = s.tables || 12;
+}
+</script>
+</body>
+</html>
